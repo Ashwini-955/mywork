@@ -1,0 +1,98 @@
+
+# Bank Customer Churn Prediction using Neural Network
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import classification_report
+
+# 1. Load Dataset
+df = pd.read_csv("Churn_Modelling.csv")
+
+print("First five rows:")
+print(df.head())
+
+# 2. Data Preprocessing
+
+# Remove unnecessary columns
+df = df.drop(['RowNumber', 'CustomerId', 'Surname'], axis=1)
+
+# Convert categorical columns into numerical values
+df = pd.get_dummies(df, columns=['Geography', 'Gender'], drop_first=True)
+
+# Separate features and target
+X = df.drop('Exited', axis=1)
+y = df['Exited']
+
+# 3. Split Dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 4. Normalize Data
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# 5. Build Neural Network Model
+model = MLPClassifier(
+    hidden_layer_sizes=(16, 8),
+    activation='relu',
+    solver='adam',
+    max_iter=500,
+    random_state=42,
+    early_stopping=True
+)
+
+# 6. Train Model
+model.fit(X_train, y_train)
+
+# 7. Make Predictions
+y_pred = model.predict(X_test)
+
+# 8. Calculate Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", accuracy)
+
+# 9. Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+
+print("\nConfusion Matrix:")
+print(cm)
+
+# Display Confusion Matrix
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
+
+# 10. Classification Report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# 11. Model Optimization
+optimized_model = MLPClassifier(
+    hidden_layer_sizes=(32, 16),
+    activation='relu',
+    solver='adam',
+    alpha=0.001,
+    max_iter=500,
+    random_state=42,
+    early_stopping=True
+)
+
+optimized_model.fit(X_train, y_train)
+
+optimized_pred = optimized_model.predict(X_test)
+
+print("\nOptimized Model Accuracy:",
+      accuracy_score(y_test, optimized_pred))

@@ -1,0 +1,89 @@
+
+# Email Spam Classification using KNN and SVM
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import classification_report
+
+# 1. Load Dataset
+df = pd.read_csv("spam.csv", encoding="latin-1")
+
+print(df.head())
+
+# 2. Data Preprocessing
+# Select required columns
+df = df[['v1', 'v2']]
+
+# Rename columns
+df.columns = ['label', 'message']
+
+# Convert labels into numbers
+df['label'] = df['label'].map({
+    'ham': 0,
+    'spam': 1
+})
+
+# Remove missing values
+df = df.dropna()
+
+print("\nDataset Information:")
+print(df.head())
+
+# 3. Separate Features and Target
+X = df['message']
+y = df['label']
+
+# 4. Convert text into numerical values
+tfidf = TfidfVectorizer(stop_words='english')
+
+X = tfidf.fit_transform(X)
+
+# 5. Split Dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 6. KNN Classifier
+knn = KNeighborsClassifier(n_neighbors=5)
+
+knn.fit(X_train, y_train)
+
+y_pred_knn = knn.predict(X_test)
+
+print("\nKNN Results")
+print("Accuracy:", accuracy_score(y_test, y_pred_knn))
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred_knn))
+print(classification_report(y_test, y_pred_knn))
+
+# 7. SVM Classifier
+svm = SVC(kernel='linear')
+
+svm.fit(X_train, y_train)
+
+y_pred_svm = svm.predict(X_test)
+
+print("\nSVM Results")
+print("Accuracy:", accuracy_score(y_test, y_pred_svm))
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred_svm))
+print(classification_report(y_test, y_pred_svm))
+
+# 8. Compare Both Algorithms
+knn_acc = accuracy_score(y_test, y_pred_knn)
+svm_acc = accuracy_score(y_test, y_pred_svm)
+
+print("\nModel Comparison")
+print("KNN Accuracy:", knn_acc)
+print("SVM Accuracy:", svm_acc)
+
+if knn_acc > svm_acc:
+    print("KNN performs better")
+else:
+    print("SVM performs better")

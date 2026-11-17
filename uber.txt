@@ -1,0 +1,126 @@
+
+# Uber Fare Prediction using Linear Regression
+# and Random Forest Regression
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_squared_error
+
+# 1. Load Dataset
+df = pd.read_csv("uber.csv")
+
+print("First five rows:")
+print(df.head())
+
+print("\nDataset Information:")
+print(df.info())
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# 2. Data Preprocessing
+df = df.dropna()
+
+# Remove unnecessary columns
+df = df.drop(columns=['Unnamed: 0', 'key'], errors='ignore')
+
+# Convert pickup_datetime into datetime
+df['pickup_datetime'] = pd.to_datetime(
+    df['pickup_datetime']
+)
+
+# Extract useful date and time features
+df['hour'] = df['pickup_datetime'].dt.hour
+df['day'] = df['pickup_datetime'].dt.day
+df['month'] = df['pickup_datetime'].dt.month
+
+# Drop original datetime column
+df = df.drop(columns=['pickup_datetime'])
+
+# 3. Detect Outliers using IQR
+Q1 = df['fare_amount'].quantile(0.25)
+Q3 = df['fare_amount'].quantile(0.75)
+
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+print("\nLower Limit:", lower)
+print("Upper Limit:", upper)
+
+# Remove outliers
+df = df[
+    (df['fare_amount'] >= lower) &
+    (df['fare_amount'] <= upper)
+]
+
+# 4. Correlation Analysis
+plt.figure(figsize=(10, 6))
+sns.heatmap(df.corr(numeric_only=True),
+            annot=True, cmap='coolwarm')
+
+plt.title("Correlation Heatmap")
+plt.show()
+
+# 5. Select Features and Target
+X = df.drop(columns=['fare_amount'])
+y = df['fare_amount']
+
+# 6. Split Dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 7. Linear Regression
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+
+y_pred_lr = lr.predict(X_test)
+
+r2_lr = r2_score(y_test, y_pred_lr)
+rmse_lr = np.sqrt(mean_squared_error(y_test, y_pred_lr))
+
+print("\nLinear Regression Results")
+print("R2 Score:", r2_lr)
+print("RMSE:", rmse_lr)
+
+# 8. Random Forest Regression
+rf = RandomForestRegressor(
+    n_estimators=100, random_state=42, n_jobs=-1
+)
+
+rf.fit(X_train, y_train)
+
+y_pred_rf = rf.predict(X_test)
+
+r2_rf = r2_score(y_test, y_pred_rf)
+rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
+
+print("\nRandom Forest Results")
+print("R2 Score:", r2_rf)
+print("RMSE:", rmse_rf)
+
+# 9. Compare Models
+print("\nModel Comparison")
+print("Linear Regression:")
+print("R2:", r2_lr, "RMSE:", rmse_lr)
+
+print("\nRandom Forest:")
+print("R2:", r2_rf, "RMSE:", rmse_rf)
+
+if r2_rf > r2_lr and rmse_rf < rmse_lr:
+    print("\nRandom Forest performs better.")
+else:
+    print("\nLinear Regression performs better or results are mixed.")
+
+
+
+
+https://github.com/unnatibisht/Uber-Fare-Prediction/blob/main/uber.csv?utm_source=chatgpt.com
